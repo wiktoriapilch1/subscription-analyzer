@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from subscriptions.schemas import SubscriptionCreate
+from subscriptions.schemas import SubscriptionCreate, SubscriptionUpdate
 from subscriptions.models import Subscription
 
 from core.database import get_db
@@ -31,3 +31,17 @@ def get_subscription_with_id(subscription_id: int, session: Session = Depends(ge
     if subscription is None:
         raise HTTPException(status_code=404, detail="Subscription not found")
     return subscription
+
+@router.patch('/subscriptions/{subscription_id}')
+def update_subscription(subscription_id: int, subscription_update: SubscriptionUpdate, session: Session = Depends(get_db)):
+    db_subscription = session.get(Subscription, subscription_id)
+    if db_subscription is None:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    else:
+        update_data = subscription_update.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_subscription, key, value)
+
+        session.commit()
+        session.refresh(db_subscription)
+        return db_subscription
