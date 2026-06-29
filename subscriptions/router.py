@@ -45,3 +45,12 @@ def update_subscription(subscription_id: int, subscription_update: SubscriptionU
         session.commit()
         session.refresh(db_subscription)
         return db_subscription
+    
+@router.delete('/subscriptions/{subscription_id}')
+def delete_subscription(subscription_id: int, session: Session = Depends(get_db)):
+    db_subscription = session.get(Subscription, subscription_id)
+    if db_subscription is None:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    session.delete(db_subscription)
+    session.commit()
+    return {"message": "Subscription deleted successfully"}
